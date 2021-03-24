@@ -1,0 +1,36 @@
+version: "3"
+services:
+  some-postgres:
+    image: postgres
+    volumes:
+      - ./database:/var/lib/postgresql/data
+    ports:
+      - 5000:5432
+    environment:
+      POSTGRES_PASSWORD: mysecretpassword
+
+  redis:
+    image: redis
+    ports:
+      - 6000:6379
+
+  auth-service:
+    build:
+      dockerfile: Dockerfile
+      context: ./auth-service
+    ports:
+      - 7000:7000
+    depends_on:
+      - redis
+      - some-postgres
+    env_file:
+      - ./auth-service/.env
+
+  backend:
+    build:
+      dockerfile: Dockerfile
+      context: ./backend-service
+    ports:
+      - 1337:3000
+    depends_on:
+      - auth-service
